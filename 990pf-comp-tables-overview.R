@@ -2,6 +2,7 @@ library( knitr )
 library( dplyr )
 library( data.tree )
 library( DiagrammeR )
+library( irs990efile )
 
 source( "rdb-functions.R" )
 
@@ -47,19 +48,87 @@ d %>%
   kable( row.names=FALSE )
 
 
+###
+###   YOU NEED TO IDENTIFY ALL TABLE HEADERS:
+###
+
+# preview functions
+
+find_group_names_pf  # tried to guess table headers
+get_var_map_pf       # renames schema vars to concordance names
+
+
+find_group_names_pf( "PF-P08-T01-COMPENSATION", d )
+
+# use two levels of the xpath to avoid conflicts
+headers <-   
+  c( "//OfcrDirTrusteesKeyEmployeeInfo/OfcrDirTrusteesOrKeyEmployee",
+     "//OfficerDirTrstKeyEmplInfoGrp/OfficerDirTrstKeyEmplGrp" )
+
+get_var_map_pf( "PF-P08-T01-COMPENSATION", d ) %>% kable(row.names=FALSE)
+
+|VARIABLE                     |XSD_VARNAME                    |
+|:----------------------------|:------------------------------|
+|PF_08_COMP_DTK_ADDR_CITY     |City                           |
+|PF_08_COMP_DTK_ADDR_CITY     |CityNm                         |
+|PF_08_COMP_DTK_ADDR_CNTR     |Country                        |
+|PF_08_COMP_DTK_ADDR_CNTR     |CountryCd                      |
+|PF_08_COMP_DTK_ADDR_L1       |AddressLine1                   |
+|PF_08_COMP_DTK_ADDR_L1       |AddressLine1Txt                |
+|PF_08_COMP_DTK_ADDR_L2       |AddressLine2                   |
+|PF_08_COMP_DTK_ADDR_L2       |AddressLine2Txt                |
+|PF_08_COMP_DTK_ADDR_STATE    |ProvinceOrState                |
+|PF_08_COMP_DTK_ADDR_STATE    |ProvinceOrStateNm              |
+|PF_08_COMP_DTK_ADDR_STATE    |State                          |
+|PF_08_COMP_DTK_ADDR_STATE    |StateAbbreviationCd            |
+|PF_08_COMP_DTK_ADDR_ZIP      |PostalCode                     |
+|PF_08_COMP_DTK_ADDR_ZIP      |ForeignPostalCd                |
+|PF_08_COMP_DTK_ADDR_ZIP      |ZIPCd                          |
+|PF_08_COMP_DTK_ADDR_ZIP      |ZIPCode                        |
+|PF_08_COMP_DTK_NAME_ORG_L1   |BusinessNameLine1              |
+|PF_08_COMP_DTK_NAME_ORG_L1   |BusinessNameLine1Txt           |
+|PF_08_COMP_DTK_NAME_ORG_L2   |BusinessNameLine2              |
+|PF_08_COMP_DTK_NAME_ORG_L2   |BusinessNameLine2Txt           |
+|PF_08_COMP_DTK_NAME_PERS     |PersonName                     |
+|PF_08_COMP_DTK_NAME_PERS     |PersonNm                       |
+|PF_08_COMP_DTK_AVE_HOUR_WEEK |AvgHoursPerWkDevotedToPosition |
+|PF_08_COMP_DTK_AVE_HOUR_WEEK |AverageHrsPerWkDevotedToPosRt  |
+|PF_08_COMP_DTK_TITLE         |Title                          |
+|PF_08_COMP_DTK_TITLE         |TitleTxt                       |
+|PF_08_COMP_DTK_COMP          |Compensation                   |
+|PF_08_COMP_DTK_COMP          |CompensationAmt                |
+|PF_08_COMP_DTK_EMPL_BEN      |ContriToEmplBenefitPlansEtc    |
+|PF_08_COMP_DTK_EMPL_BEN      |EmployeeBenefitProgramAmt      |
+|PF_08_COMP_DTK_EXP_ACC       |ExpenseAccountOtherAllowances  |
+|PF_08_COMP_DTK_EXP_ACC       |ExpenseAccountOtherAllwncAmt   |
+
+
 
 t.xpaths <- 
   get_table_xpaths( 
     table.name="PF-P08-T01-COMPENSATION",
     concordance=d )
 
+head( t.xpaths ) %>% kable()
+
+|xpath                                                                                                                  | id|
+|:----------------------------------------------------------------------------------------------------------------------|--:|
+|/Return/ReturnData/IRS990PF/OfcrDirTrusteesKeyEmployeeInfo/OfcrDirTrusteesOrKeyEmployee/AvgHoursPerWkDevotedToPosition |  1|
+|/Return/ReturnData/IRS990PF/OfcrDirTrusteesKeyEmployeeInfo/OfcrDirTrusteesOrKeyEmployee/BusinessName/BusinessNameLine1 |  2|
+|/Return/ReturnData/IRS990PF/OfcrDirTrusteesKeyEmployeeInfo/OfcrDirTrusteesOrKeyEmployee/BusinessName/BusinessNameLine2 |  3|
+|/Return/ReturnData/IRS990PF/OfcrDirTrusteesKeyEmployeeInfo/OfcrDirTrusteesOrKeyEmployee/Compensation                   |  4|
+|/Return/ReturnData/IRS990PF/OfcrDirTrusteesKeyEmployeeInfo/OfcrDirTrusteesOrKeyEmployee/ContriToEmplBenefitPlansEtc    |  5|
+|/Return/ReturnData/IRS990PF/OfcrDirTrusteesKeyEmployeeInfo/OfcrDirTrusteesOrKeyEmployee/ExpenseAccountOtherAllowances  |  6|
+ 
+
+
+
+
+
+
 plot_nd(  t.xpaths )
 print_nd( t.xpaths )
 
-# YOU NEED TO IDENTIFY ALL TABLE HEADERS:
-  headers <- 
-    c( "//OfcrDirTrusteesKeyEmployeeInfo/OfcrDirTrusteesOrKeyEmployee",
-       "//OfficerDirTrstKeyEmplInfoGrp/OfficerDirTrstKeyEmplGrp" )
 
 # 1  Return                                            
 # 2   °--ReturnData                                    
@@ -142,6 +211,12 @@ print_nd( t.xpaths )
 
 
 
+
+
+
+
+
+
 #####
 #####  PF-P08-T02-COMPENSATION-HIGHEST
 #####
@@ -171,6 +246,10 @@ d %>%
 |PF-P08-T02-COMPENSATION-HIGHEST |PF_08_COMP_DTK_COMP_HCE          |F990-PF-PART-08-LINE-02-COL-C |
 |PF-P08-T02-COMPENSATION-HIGHEST |PF_08_COMP_DTK_EMPL_BEN_HCE      |F990-PF-PART-08-LINE-02-COL-D |
 |PF-P08-T02-COMPENSATION-HIGHEST |PF_08_COMP_DTK_EXP_ACC_HCE       |F990-PF-PART-08-LINE-02-COL-E |
+
+
+
+
 
 
 
