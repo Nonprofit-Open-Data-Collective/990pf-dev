@@ -205,7 +205,9 @@ get_table_v2 <- function( doc, table.name, table.headers )
 
 
 
-
+###################################
+###################################    CREATE RDB TABLES 
+###################################
   
   
 
@@ -368,7 +370,9 @@ build_rdb_table_pf <- function( url, table.name, table.headers, v.map, concordan
 
 
 
-
+###################################
+###################################    SPLIT INDEX INTO BATCHES AND BUILD TABLES 
+###################################
 
 
 split_index <- function( index, group.size=1000 )
