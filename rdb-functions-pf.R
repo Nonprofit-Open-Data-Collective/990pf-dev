@@ -385,6 +385,8 @@ split_index <- function( index, group.size=1000 )
 build_year <- function( year )
 {
 
+  cat( paste0( "\n\n######   START OF YEAR ", year, "   ######\n\n\n" ) )
+	
   dir.create( year )
   setwd( year )
 
@@ -392,6 +394,8 @@ build_year <- function( year )
 
   index.sub <- dplyr::filter( index, TaxYear == year )
   split.index <- split_index( index.sub )
+
+  cat( paste( "THERE ARE , length(split.index), " BATCHES.\n\n" ) )
 
   results.list <- list()
   failed.urls <- NULL
@@ -401,6 +405,9 @@ build_year <- function( year )
   {
     b.num <- substr( 10000 + i, 2, 5 )  # batch.number
     urls <- split.index[[i]]
+
+    cat( paste0( "BATCH NUMBER: ", b.num, "\n\n" ) )
+
     start.time <- Sys.time()
 
     for( j in 1:length(urls) )
