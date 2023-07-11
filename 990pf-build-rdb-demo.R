@@ -1,12 +1,16 @@
 library( dplyr )
 library( irs990efile )
 library( jsonlite )
+library( data.tree )
+library( knitr )
 
-source( "rdb-functions-pf.R" )
+url <- "https://raw.githubusercontent.com/Nonprofit-Open-Data-Collective/990pf-dev/main/rdb-functions-pf.R"
+source( url )
 
 
 
 # dir trust key emp
+
 dir.create("DTK") 
 setwd("DTK")
 
@@ -27,7 +31,7 @@ setwd("DTK")
 URL <- "https://raw.githubusercontent.com/Nonprofit-Open-Data-Collective/990pf-dev/main/concordance-pf/f990pf-part-08.csv"
 concordance <-  read.csv( URL )
 
-headers <-   
+table.headers <-   
   c( "//OfcrDirTrusteesKeyEmployeeInfo/OfcrDirTrusteesOrKeyEmployee",
      "//OfficerDirTrstKeyEmplInfoGrp/OfficerDirTrstKeyEmplGrp" )
      
@@ -84,7 +88,7 @@ for( i in 1:length(test.urls) )
 
 
 df <- dplyr::bind_rows( results.list )
-
+df %>% knitr::kable()
 
 
 
@@ -111,79 +115,6 @@ index <- dplyr::filter( index, FormType %in% "990PF" )
 
 URL <- "https://raw.githubusercontent.com/Nonprofit-Open-Data-Collective/990pf-dev/main/concordance-pf/f990pf-part-08.csv"
 concordance <-  read.csv( URL )
-
-
-split_index <- function( index, group.size=1000 )
-{
-  urls <- index$URL
-  f <- ( ( 1 : length(urls) ) + group.size - 1 ) %/% group.size
-  f <- paste0( "g", f )
-  f <- factor( f, levels=unique(f) )
-  url.list <- split( urls, f )
-  return( url.list )
-}
-
-
-build_year <- function( year )
-{
-
-  dir.create( year )
-  setwd( year )
-
-  total.start.time <- Sys.time()
-
-  index.sub <- dplyr::filter( index, TaxYear == year )
-  split.index <- split_index( index.sub )
-
-  results.list <- list()
-  failed.urls <- NULL
-
-
-  for( i in 1:length(split.index) )
-  {
-    b.num <- substr( 10000 + i, 2, 5 )  # batch.number
-    urls <- split.index[[i]]
-    start.time <- Sys.time()
-
-    for( j in 1:length(urls) )
-    {
-    
-      url <- urls[j]
-      try( temp.table <- build_rdb_table_pf( url, table.name, table.headers, v.map, concordance ) )
-      results.list[[j]] <- temp.table 
-
-      if( is.null(temp.table) )
-      { failed.urls[[ length(failed.urls) + 1 ]] <- url }
-
-    }
-
-
-    end.time <- Sys.time()
-    print( paste0( "Batch ", i ) )
-    print( end.time - start.time )
-  
-    df <- dplyr::bind_rows( results.list )
-    saveRDS( df, paste0( "batch", "-", b.num, ".rds" ) )
-    write.csv( df, paste0( "batch", "-", b.num, ".csv" ), row.names=F )
-    
-  }
-
-
-  total.end.time <- Sys.time()
-  failed.urls <- unlist( failed.urls )
-  dump( list="failed.urls", file="FAILED-URLS.R" )  
-  setwd( ".." )
-  print( paste0( "YEAR ", year, " COMPLETE" ) )
-  print( "TOTAL RUN TIME:" )
-  print( difftime( total.start.time, total.end.time, units="hours") )
-
-
-  return( failed.urls )
-
-}
-
-
-
 
 years <- c( 2009:2020 ) %>% as.character()
 
