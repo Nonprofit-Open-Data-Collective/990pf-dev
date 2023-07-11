@@ -1,4 +1,9 @@
 
+###################################
+###################################   PRINT / PLOT TABLE STRUCTURE
+###################################
+
+
 get_table_xpaths <- function( table.name, concordance=NULL )
 {
   if( is.null(concordance) )
@@ -61,8 +66,8 @@ plot_nd <- function( t.xpaths )
   # print( nd )
   
   data.tree::SetGraphStyle( nd, rankdir = "LR")
-  data.tree::SetEdgeStyle( nd, arrowhead = "vee", color = "grey20", penwidth = 2 )
-  data.tree::SetNodeStyle( nd, 
+  data.tree::SetEdgeStyle(  nd, arrowhead = "vee", color = "grey20", penwidth = 2 )
+  data.tree::SetNodeStyle(  nd, 
                 style = "filled,rounded", 
                 shape = "box", 
                 fillcolor = "LightBlue", 
@@ -75,14 +80,19 @@ plot_nd <- function( t.xpaths )
 }
 
 
+###################################
+###################################   TABLE HEADER FUNCTIONS
+###################################
+
+
 
 find_group_names_pf <- function( table.name, concordance.pf )
 {
   # data(concordance)
-  TABLE <- dplyr::filter( concordance, rdb_table == table.name )
+  TABLE  <- dplyr::filter( concordance, rdb_table == table.name )
   xpaths <- TABLE$xpath %>% as.character()
   xpaths <- gsub( "IRS990EZ", "IRS990", xpaths )
-  nodes <- strsplit( xpaths, "/" )
+  nodes  <- strsplit( xpaths, "/" )
   d1 <- suppressWarnings( data.frame( do.call( cbind, nodes ), stringsAsFactors=F ) )
   not.equal <- apply( d1, MARGIN=1, FUN=function(x){ length( unique( x )) > 1 } ) 
   this.one <- which( not.equal == T )[ 1 ]
@@ -113,7 +123,7 @@ get_table_v2 <- function( doc, table.name, table.headers )
   data( concordance )
 
   TABLE <- dplyr::filter( concordance, rdb_table == table.name )
-  original.xpaths <- TABLE$xpath %>% as.character()
+  original.xpaths    <- TABLE$xpath %>% as.character()
   all.table.versions <- paste0( table.headers, collapse="|" )
   # print(all.groups)
 
@@ -209,7 +219,7 @@ get_table_pf <- function( doc, table.name, table.headers, concordance  )
   nd <- xml2::xml_find_all( doc, all.headers )
   if( length( nd ) == 0 ){ return(NULL) }
 
-  rdb.table <- xmltools::xml_dig_df( nd ) %>% bind_rows() 
+  rdb.table <- suppressMessages( xmltools::xml_dig_df( nd ) %>% bind_rows()  )
   rdb.table <- rdb.table %>% dplyr::mutate_if(is.factor, as.character) 
   return( rdb.table )
 }
