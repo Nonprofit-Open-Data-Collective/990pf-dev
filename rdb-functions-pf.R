@@ -395,7 +395,7 @@ build_year <- function( year )
   index.sub <- dplyr::filter( index, TaxYear == year )
   split.index <- split_index( index.sub )
 
-  cat( paste( "THERE ARE , length(split.index), " BATCHES.\n\n" ) )
+  cat( paste( "THERE ARE ", length(split.index), " BATCHES.\n\n" ) )
 
   results.list <- list()
   failed.urls <- NULL
