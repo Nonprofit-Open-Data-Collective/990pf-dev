@@ -16,6 +16,7 @@ get_table_xpaths <- function( table.name, concordance=NULL )
 
 
 # INCLUDES Return & ReturnData NODES
+
 create_edgelist_v1 <- function( xpaths )
 {
   # xpaths <- gsub("^/Return/ReturnData/", "", xpaths )
@@ -47,7 +48,7 @@ print_nd <- function( t.xpaths )
 {
   xpaths <- as.character( t.xpaths$xpath )
   el <- create_edgelist_v1( xpaths )
-  nd <- FromDataFrameNetwork( network=el )
+  nd <- data.tree::FromDataFrameNetwork( network=el )
   print( nd )
 }
 
@@ -56,12 +57,12 @@ plot_nd <- function( t.xpaths )
 {
   xpaths <- as.character( t.xpaths$xpath )
   el <- create_edgelist_v1( xpaths )
-  nd <- FromDataFrameNetwork( network=el )
+  nd <- data.tree::FromDataFrameNetwork( network=el )
   # print( nd )
   
-  SetGraphStyle( nd, rankdir = "LR")
-  SetEdgeStyle( nd, arrowhead = "vee", color = "grey20", penwidth = 2 )
-  SetNodeStyle( nd, 
+  data.tree::SetGraphStyle( nd, rankdir = "LR")
+  data.tree::SetEdgeStyle( nd, arrowhead = "vee", color = "grey20", penwidth = 2 )
+  data.tree::SetNodeStyle( nd, 
                 style = "filled,rounded", 
                 shape = "box", 
                 fillcolor = "LightBlue", 
@@ -194,35 +195,7 @@ get_table_v2 <- function( doc, table.name, table.headers )
 
 
 
-  # ensure group names unique to table
-  valid <- validate_group_names( nd, table.name )
-  if( ! valid )
-  { 
-    xp <- nd %>% xml2::xml_path()
-    xp <- gsub( "\\[[0-9]{1,}\\]", "", xp ) %>% unique()
-    print("TABLE: ")
-    print( table.name )
-    print("TABLE XPATHS: ")
-    print( original.xpaths )
-    print("CURRENT XPATHS: ")
-    print( xp )
-    stop( 'Group names are not unique to the table' )
-  }
 
-  # ensure we are using root node for table
-  table.xpaths <- ( xmltools::xml_get_paths( nd, only_terminal_parent = TRUE ))
-  table.xpaths <- table.xpaths %>% unlist() %>% unique()
-  if( length( table.xpaths ) > 1 )
-  {
-     nodes <- strsplit( table.xpaths, "/" )
-     d1 <- suppressWarnings( data.frame( do.call( cbind, nodes ), stringsAsFactors=F ) )
-     not.equal <- apply( d1, MARGIN=1, FUN=function(x){ length( unique( x )) > 1 } ) 
-     this.one <- which( not.equal == T )[ 1 ]
-     if( this.one < 2 ){ return( NULL ) }
-     table.root <- d1[ this.one - 1,  ] %>% as.character() %>% unique()
-     table.root <- paste0( "//", table.root )
-     nd <- xml2::xml_find_all( doc, table.root )
-  }
   
   
 
@@ -381,3 +354,49 @@ build_rdb_table_pf <- function( url, table.name, table.headers, v.map, concordan
 
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# # ensure group names unique to table
+# valid <- validate_group_names( nd, table.name )
+# if( ! valid )
+# { 
+#   xp <- nd %>% xml2::xml_path()
+#   xp <- gsub( "\\[[0-9]{1,}\\]", "", xp ) %>% unique()
+#   print("TABLE: ")
+#   print( table.name )
+#   print("TABLE XPATHS: ")
+#   print( original.xpaths )
+#   print("CURRENT XPATHS: ")
+#   print( xp )
+#   stop( 'Group names are not unique to the table' )
+# }
+# 
+# # ensure we are using root node for table
+# table.xpaths <- ( xmltools::xml_get_paths( nd, only_terminal_parent = TRUE ))
+# table.xpaths <- table.xpaths %>% unlist() %>% unique()
+# if( length( table.xpaths ) > 1 )
+# {
+#   nodes <- strsplit( table.xpaths, "/" )
+#   d1 <- suppressWarnings( data.frame( do.call( cbind, nodes ), stringsAsFactors=F ) )
+#   not.equal <- apply( d1, MARGIN=1, FUN=function(x){ length( unique( x )) > 1 } ) 
+#   this.one <- which( not.equal == T )[ 1 ]
+#   if( this.one < 2 ){ return( NULL ) }
+#   table.root <- d1[ this.one - 1,  ] %>% as.character() %>% unique()
+#   table.root <- paste0( "//", table.root )
+#   nd <- xml2::xml_find_all( doc, table.root )
+# }
