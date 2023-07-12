@@ -367,11 +367,10 @@ bind_data_pf <- function( years, table.name )
      file.names <- file.names[ grepl( "*.csv", file.names ) ]
      
      d.list <- list()
-
+	   
      for( j in file.names )
      {
        d.list[[ j ]] <- read.csv( j )
-       d <- NULL
      }
 
      d <- dplyr::bind_rows( d.list )
