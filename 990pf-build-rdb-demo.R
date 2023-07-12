@@ -173,7 +173,3 @@ df %>% knitr::kable()
 
 
 
-
-
-
-savehistory(file = ".Rhistory")
