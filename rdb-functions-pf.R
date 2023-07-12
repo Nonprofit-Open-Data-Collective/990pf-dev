@@ -314,7 +314,7 @@ build_year <- function( year, index, table.name, table.headers, v.map, concordan
   split.index <- split_index( index.sub, batch.size )
 
   failed.urls <- 
-    foreach::foreach( i = 1:4 ) %dopar% 
+    foreach::foreach( i = 1:length(split.index) ) %dopar% 
     {
 
       require( irs990efile )
