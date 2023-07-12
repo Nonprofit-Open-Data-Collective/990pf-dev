@@ -367,6 +367,33 @@ build_year <- function( year, index, table.name, table.headers, v.map, concordan
 
 
 
+bind_data_pf <- function( years, table.name )
+{
+   dir.create( "COMPILED" )
+  
+   for( i in years )
+   {
+     setwd( as.character(i) )
+     file.names <- dir()
+     file.names <- file.names[ grepl( "*.csv", file.names ) ]
+     
+     d.list <- list()
+
+     for( j in file.names )
+     {
+       d.list[[ j ]] <- read.csv( j )
+       d <- NULL
+     }
+
+     d <- dplyr::bind_rows( d.list )
+     d <- unique(d)
+
+     write.csv( d, paste0( "../COMPILED/", table.name, "-", i, ".csv" ), row.names=F )
+     setwd( ".." )
+     
+   } # end i loop 
+}
+
 
 
 
