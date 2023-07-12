@@ -293,24 +293,12 @@ split_index <- function( index, group.size=1000 )
 
 
 
-start_cluster <- function()
-{
-  totalCores <- parallel::detectCores()
-  cluster    <- parallel::makeCluster( totalCores[1]-1 ) 
-  doParallel::registerDoParallel( cluster )
-}
-
-
-
-stop_cluster <- function()
-{
-  stopCluster( cluster )
-}
-
-
 
 build_year <- function( year, index, table.name, table.headers, v.map, concordance, batch.size=100 )
 {
+	
+  total.start.time <- Sys.time()
+	
   require( foreach )
   require( doParallel )
 
@@ -318,9 +306,10 @@ build_year <- function( year, index, table.name, table.headers, v.map, concordan
   setwd( year )
   fpath <- getwd()
 
-  start_cluster()
-  total.start.time <- Sys.time()
-
+  totalCores <- parallel::detectCores()
+  cluster    <- parallel::makeCluster( totalCores[1]-1 ) 
+  doParallel::registerDoParallel( cluster )
+  
   index.sub <- dplyr::filter( index, TaxYear == year )
   split.index <- split_index( index.sub, batch.size )
 
@@ -349,7 +338,7 @@ build_year <- function( year, index, table.name, table.headers, v.map, concordan
       failed.attempts
     }
 
-  stop_cluster()
+  stopCluster( cluster )
   
   total.end.time <- Sys.time()
   print( paste0( "YEAR ", year, " COMPLETE" ) )
