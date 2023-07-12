@@ -10,11 +10,11 @@ get_table_xpaths <- function( table.name, concordance=NULL )
   { data(concordance) } # works for 990 and 990ez, not 990pf
 
   t.xpaths <- 
-    concordance %>%
-    filter( rdb_table == table.name ) %>% 
-    select( xpath ) %>% 
-    unique() %>% 
-    arrange( xpath ) %>% 
+    concordance |>
+    filter( rdb_table == table.name ) |> 
+    select( xpath ) |> 
+    unique() |> 
+    arrange( xpath ) |> 
     mutate( id=row_number() ) 
     return( t.xpaths )
 }
@@ -90,13 +90,13 @@ find_group_names_pf <- function( table.name, concordance.pf )
 {
   # data(concordance)
   TABLE  <- dplyr::filter( concordance, rdb_table == table.name )
-  xpaths <- TABLE$xpath %>% as.character()
+  xpaths <- TABLE$xpath |> as.character()
   xpaths <- gsub( "IRS990EZ", "IRS990", xpaths )
   nodes  <- strsplit( xpaths, "/" )
   d1 <- suppressWarnings( data.frame( do.call( cbind, nodes ), stringsAsFactors=F ) )
   not.equal <- apply( d1, MARGIN=1, FUN=function(x){ length( unique( x )) > 1 } ) 
   this.one <- which( not.equal == T )[ 1 ]
-  group.names <- d1[ this.one,  ] %>% as.character() %>% unique()
+  group.names <- d1[ this.one,  ] |> as.character() |> unique()
   group.names <- paste0( "//", group.names )
   return( group.names )
 }
@@ -105,7 +105,7 @@ get_var_map_pf <- function( table.name, concordance.pf )
 {
    # data(concordance)
    TABLE <- dplyr::filter( concordance, rdb_table == table.name )
-   xpaths <- TABLE$xpath %>% as.character()
+   xpaths <- TABLE$xpath |> as.character()
    res <- strsplit( xpaths, "/" )
    v.map <- data.frame( VARIABLE=as.character(TABLE$variable_name), 
             XSD_VARNAME=unlist( lapply( res, dplyr::last ) ), stringsAsFactors=F )
@@ -123,7 +123,7 @@ get_table_v2 <- function( doc, table.name, table.headers )
   data( concordance )
 
   TABLE <- dplyr::filter( concordance, rdb_table == table.name )
-  original.xpaths    <- TABLE$xpath %>% as.character()
+  original.xpaths    <- TABLE$xpath |> as.character()
   all.table.versions <- paste0( table.headers, collapse="|" )
   # print(all.groups)
 
@@ -139,8 +139,8 @@ get_table_v2 <- function( doc, table.name, table.headers )
     xmltools::xml_get_paths( nd, 
                              only_terminal_parent = TRUE )
   table.xpaths <- 
-    table.xpaths %>% 
-    unlist() %>% 
+    table.xpaths |> 
+    unlist() |> 
     unique()
   
   #since we have them all, just capture the data from here?
@@ -157,11 +157,11 @@ get_table_v2 <- function( doc, table.name, table.headers )
 
   
   rdb.table <- 
-    suppressMessages( xmltools::xml_dig_df( nd, dig = TRUE ) ) %>% 
+    suppressMessages( xmltools::xml_dig_df( nd, dig = TRUE ) ) |> 
     bind_rows()
 
   rdb.table <- 
-    rdb.table %>% 
+    rdb.table |> 
     dplyr::mutate_if( is.factor, as.character )
 
   if( length( table.xpaths ) > 1 )
@@ -182,8 +182,8 @@ get_table_v2 <- function( doc, table.name, table.headers )
         #for example if we have address us and address foreign
     
         temp.df <- 
-          suppressMessages( xmltools::xml_dig_df( nd, dig = TRUE ) ) %>% 
-          bind_rows() %>% 
+          suppressMessages( xmltools::xml_dig_df( nd, dig = TRUE ) ) |> 
+          bind_rows() |> 
           dplyr::mutate_if( is.factor, as.character )
 
         rdb.table <- cbind( rdb.table, temp.df )
@@ -216,13 +216,13 @@ get_table_pf <- function( doc, table.name, table.headers, concordance  )
 {
 
   TABLE <- dplyr::filter( concordance, rdb_table == table.name )
-  original.xpaths <- TABLE$xpath %>% as.character()
+  original.xpaths <- TABLE$xpath |> as.character()
   all.headers <- paste0( table.headers, collapse="|" )
   nd <- xml2::xml_find_all( doc, all.headers )
   if( length( nd ) == 0 ){ return(NULL) }
 
-  rdb.table <- suppressMessages( xmltools::xml_dig_df( nd ) %>% bind_rows()  )
-  rdb.table <- rdb.table %>% dplyr::mutate_if(is.factor, as.character) 
+  rdb.table <- suppressMessages( xmltools::xml_dig_df( nd ) |> bind_rows()  )
+  rdb.table <- rdb.table |> dplyr::mutate_if(is.factor, as.character) 
   return( rdb.table )
 }
 
@@ -253,7 +253,7 @@ build_rdb_table_pf <- function( url, table.name, table.headers, v.map, concordan
 
 	## OBJECT ID
 
-	OBJECTID <- get_object_id( url )
+	OBJECTID <- irs990efile::get_object_id( url )
 
 
 	## URL
@@ -465,8 +465,8 @@ build_year <- function( year )
 # valid <- validate_group_names( nd, table.name )
 # if( ! valid )
 # { 
-#   xp <- nd %>% xml2::xml_path()
-#   xp <- gsub( "\\[[0-9]{1,}\\]", "", xp ) %>% unique()
+#   xp <- nd |> xml2::xml_path()
+#   xp <- gsub( "\\[[0-9]{1,}\\]", "", xp ) |> unique()
 #   print("TABLE: ")
 #   print( table.name )
 #   print("TABLE XPATHS: ")
@@ -478,7 +478,7 @@ build_year <- function( year )
 # 
 # # ensure we are using root node for table
 # table.xpaths <- ( xmltools::xml_get_paths( nd, only_terminal_parent = TRUE ))
-# table.xpaths <- table.xpaths %>% unlist() %>% unique()
+# table.xpaths <- table.xpaths |> unlist() |> unique()
 # if( length( table.xpaths ) > 1 )
 # {
 #   nodes <- strsplit( table.xpaths, "/" )
@@ -486,7 +486,7 @@ build_year <- function( year )
 #   not.equal <- apply( d1, MARGIN=1, FUN=function(x){ length( unique( x )) > 1 } ) 
 #   this.one <- which( not.equal == T )[ 1 ]
 #   if( this.one < 2 ){ return( NULL ) }
-#   table.root <- d1[ this.one - 1,  ] %>% as.character() %>% unique()
+#   table.root <- d1[ this.one - 1,  ] |> as.character() |> unique()
 #   table.root <- paste0( "//", table.root )
 #   nd <- xml2::xml_find_all( doc, table.root )
 # }
