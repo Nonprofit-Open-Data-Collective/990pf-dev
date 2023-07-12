@@ -117,95 +117,6 @@ get_var_map_pf <- function( table.name, concordance.pf )
 
 
 
-
-get_table_v2 <- function( doc, table.name, table.headers )
-{
-
-  data( concordance )
-
-  TABLE <- dplyr::filter( concordance, rdb_table == table.name )
-  original.xpaths    <- TABLE$xpath |> as.character()
-  all.table.versions <- paste0( table.headers, collapse="|" )
-  # print(all.groups)
-
-  nd <- xml2::xml_find_all( doc, all.table.versions )
-  
-  if( length( nd ) == 0 ){ return(NULL) }
-  
-  valid <- TRUE
-  
-  # ensure we are using root node for table
-  
-  table.xpaths <- 
-    xmltools::xml_get_paths( nd, 
-                             only_terminal_parent = TRUE )
-  table.xpaths <- 
-    table.xpaths |> 
-    unlist() |> 
-    unique()
-  
-  #since we have them all, just capture the data from here?
-  # print(table.xpaths)
-  
-  nodes <- strsplit( table.xpaths, "/" )
-  length.one <- length( nodes[[1]] )
-
-  tr <- 
-    paste0( "//", nodes[[1]][ length.one-1 ], 
-            "/",  nodes[[1]][ length.one   ] )
-
-  nd <- xml2::xml_find_all( doc, tr )
-
-  
-  rdb.table <- 
-    suppressMessages( xmltools::xml_dig_df( nd, dig = TRUE ) ) |> 
-    bind_rows()
-
-  rdb.table <- 
-    rdb.table |> 
-    dplyr::mutate_if( is.factor, as.character )
-
-  if( length( table.xpaths ) > 1 )
-  {
-    for( i in 2:length(table.xpaths) )
-    {
-      l <- length( nodes[[i]] )
-
-      table.root <- 
-        paste0( "//", nodes[[i]][ l-1 ], 
-                "/",  nodes[[i]][ l   ] )
-
-      nd <- xml2::xml_find_all( doc, table.root )
-
-      if( ! (length(nd) < nrow(rdb.table) ) )
-      {
-        #weirdness occurs when we have mixed formatting 
-        #for example if we have address us and address foreign
-    
-        temp.df <- 
-          suppressMessages( xmltools::xml_dig_df( nd, dig = TRUE ) ) |> 
-          bind_rows() |> 
-          dplyr::mutate_if( is.factor, as.character )
-
-        rdb.table <- cbind( rdb.table, temp.df )
-
-      } else{  # end if
-
-               print( "WEIRD TABLE FORMATTING" )
-               print( url ) 
-
-             } # end else
-
-    } # end for
-
-  } # end if
-
-  return( rdb.table )
-
-}
-
-
-
 ###################################
 ###################################    CREATE RDB TABLES 
 ###################################
@@ -215,13 +126,11 @@ get_table_v2 <- function( doc, table.name, table.headers )
 
 get_table_pf <- function( doc, table.name, table.headers, concordance  )
 {
-
   TABLE <- dplyr::filter( concordance, rdb_table == table.name )
   original.xpaths <- TABLE$xpath |> as.character()
   all.headers <- paste0( table.headers, collapse="|" )
   nd <- xml2::xml_find_all( doc, all.headers )
   if( length( nd ) == 0 ){ return(NULL) }
-
   rdb.table <- suppressMessages( xmltools::xml_dig_df( nd ) |> bind_rows()  )
   rdb.table <- rdb.table |> dplyr::mutate_if(is.factor, as.character) 
   return( rdb.table )
@@ -233,17 +142,13 @@ build_rdb_table_pf <- function( url, table.name, table.headers, v.map, concordan
 {
 
 	# load the XML document
-
 	doc <- NULL
-
 	try( doc <- xml2::read_xml( file(url) ), silent=T ) 
-	
 	if( is.null(doc) )
 	{ 
 	  cat( paste0( url, "\n" ), sep="", file="FAIL-LOG.txt", append=TRUE )
 	  return( NULL )
 	}
-
 	xml2::xml_ns_strip( doc )
 
 
