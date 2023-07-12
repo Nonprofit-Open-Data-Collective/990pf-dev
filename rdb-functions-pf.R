@@ -4,6 +4,7 @@
 ###################################
 
 
+
 get_table_xpaths <- function( table.name, concordance=NULL )
 {
   if( is.null(concordance) )
@@ -453,6 +454,19 @@ build_year <- function( year )
 
 
 
+
+###################################
+###################################   UTILS
+###################################
+
+
+get_object_id <- function( url )
+{
+    object.id <- gsub("https://nccs-efile.s3.us-east-1.amazonaws.com/xml/", 
+        "", url)
+    object.id <- gsub("_public.xml", "", object.id)
+    return(object.id)
+}
 
 
 
