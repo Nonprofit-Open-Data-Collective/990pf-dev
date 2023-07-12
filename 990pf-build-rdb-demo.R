@@ -26,6 +26,8 @@ index <- dplyr::filter( index, FormType %in% "990PF" )
 URL <- "https://raw.githubusercontent.com/Nonprofit-Open-Data-Collective/990pf-dev/main/concordance-pf/f990pf-part-08.csv"
 concordance <-  read.csv( URL )
 
+table.name <- "PF-P08-T01-COMPENSATION"
+
 table.headers <-   
   c( "//OfcrDirTrusteesKeyEmployeeInfo/OfcrDirTrusteesOrKeyEmployee",
      "//OfficerDirTrstKeyEmplInfoGrp/OfficerDirTrstKeyEmplGrp" )
@@ -66,7 +68,7 @@ for( k in years )
   build_year( k, index, table.name, table.headers, v.map, concordance )
 }
 
-bind_data( years )
+bind_data_pf( years, table.name )
 
 
 
@@ -85,11 +87,23 @@ bind_data( years )
 
 
 ####################################################
+####################################################   BUILD SETUP
 ####################################################
 
 
+# load the corresponding part of the concordance 
 
-# find_group_names_pf( "PF-P08-T01-COMPENSATION", d )
+URL <- "https://raw.githubusercontent.com/Nonprofit-Open-Data-Collective/990pf-dev/main/concordance-pf/f990pf-part-08.csv"
+concordance <-  read.csv( URL )
+
+
+# find_group_names_pf( "PF-P08-T01-COMPENSATION", d )  # table headers
+
+table.headers <-   
+  c( "//OfcrDirTrusteesKeyEmployeeInfo/OfcrDirTrusteesOrKeyEmployee",
+     "//OfficerDirTrstKeyEmplInfoGrp/OfficerDirTrstKeyEmplGrp" )
+
+
 # v.map <- get_var_map_pf( "PF-P08-T01-COMPENSATION", d )
 
 # ADD VARIABLES MISSED IN CONCORDANCE EXAMPLE
@@ -98,13 +112,6 @@ bind_data( years )
 #   d.add <- data.frame( VARIABLE=x1, XSD_VARNAME=x2 )
 #   v.map <- bind_rows( v.map, d.add )
 
-URL <- "https://raw.githubusercontent.com/Nonprofit-Open-Data-Collective/990pf-dev/main/concordance-pf/f990pf-part-08.csv"
-concordance <-  read.csv( URL )
-
-table.headers <-   
-  c( "//OfcrDirTrusteesKeyEmployeeInfo/OfcrDirTrusteesOrKeyEmployee",
-     "//OfficerDirTrstKeyEmplInfoGrp/OfficerDirTrstKeyEmplGrp" )
-     
 v.map <- 
 structure(list(VARIABLE = c("PF_08_COMP_DTK_ADDR_CITY", "PF_08_COMP_DTK_ADDR_CITY", 
 "PF_08_COMP_DTK_ADDR_CNTR", "PF_08_COMP_DTK_ADDR_CNTR", "PF_08_COMP_DTK_ADDR_L1", 
@@ -129,6 +136,12 @@ structure(list(VARIABLE = c("PF_08_COMP_DTK_ADDR_CITY", "PF_08_COMP_DTK_ADDR_CIT
 10L, 12L, 16L, 18L, 22L, 24L, 25L, 27L, 28L, 29L, 31L, 32L, 34L, 
 36L, 37L, 39L, 40L, 41L, 42L, 43L, 44L, 45L, 46L, 47L, 48L, 49L, 
 50L, 51L), class = "data.frame")
+
+
+
+
+     
+
 
 
 
