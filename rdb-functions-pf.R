@@ -387,70 +387,80 @@ split_index <- function( index, group.size=1000 )
 }
 
 
-build_year <- function( year )
-{
 
-  cat( paste0( "\n\n######   START OF YEAR ", year, "   ######\n\n\n" ) )
-	
+start_cluster <- function()
+{
+  totalCores <- parallel::detectCores()
+  cluster    <- parallel::makeCluster( totalCores[1]-1 ) 
+  doParallel::registerDoParallel( cluster )
+}
+
+
+
+stop_cluster <- function()
+{
+  stopCluster( cluster )
+}
+
+
+
+build_year <- function( year, index, table.name, table.headers, v.map, concordance, batch.size=100 )
+{
+  require( foreach )
+  require( doParallel )
+
   dir.create( year )
   setwd( year )
+  fpath <- getwd()
 
+  start_cluster()
   total.start.time <- Sys.time()
 
   index.sub <- dplyr::filter( index, TaxYear == year )
-  split.index <- split_index( index.sub )
+  split.index <- split_index( index.sub, batch.size )
 
-  cat( paste( "THERE ARE ", length(split.index), " BATCHES.\n\n" ) )
-
-  results.list <- list()
-  failed.urls <- NULL
-
-
-  for( i in 1:length(split.index) )
-  {
-    b.num <- substr( 10000 + i, 2, 5 )  # batch.number
-    urls <- split.index[[i]]
-
-    cat( paste0( "BATCH NUMBER: ", b.num, "\n\n" ) )
-
-    start.time <- Sys.time()
-
-    for( j in 1:length(urls) )
+  failed.urls <- 
+    foreach::foreach( i = 1:4 ) %dopar% 
     {
+
+      require( irs990efile )
+      require( dplyr )
+      url <- "https://raw.githubusercontent.com/Nonprofit-Open-Data-Collective/990pf-dev/main/rdb-functions-pf.R"
+      source( url )
     
-      url <- urls[j]
-      try( temp.table <- build_rdb_table_pf( url, table.name, table.headers, v.map, concordance ) )
-      results.list[[j]] <- temp.table 
+      urls <- split.index[[ i ]]
+ 
+      results.list <- 
+         lapply( urls, build_rdb_table_pf, 
+                 table.name, table.headers, 
+                 v.map, concordance )
 
-      if( is.null(temp.table) )
-      { failed.urls[[ length(failed.urls) + 1 ]] <- url }
+      df <- dplyr::bind_rows( results.list )
+      batch.num <- substr( 1000000 + i, 4, 7 ) 
+      file.name <- paste0( fpath, "/batch", "-", batch.num, ".csv" )
+      write.csv( df, file.name, row.names=F )
 
+      failed.attempts <- urls[ sapply( results.list, is.null ) ]
+      failed.attempts
     }
 
-
-    end.time <- Sys.time()
-    print( paste0( "Batch ", i ) )
-    print( end.time - start.time )
+  stop_cluster()
   
-    df <- dplyr::bind_rows( results.list )
-    saveRDS( df, paste0( "batch", "-", b.num, ".rds" ) )
-    write.csv( df, paste0( "batch", "-", b.num, ".csv" ), row.names=F )
-    
-  }
-
-
   total.end.time <- Sys.time()
-  failed.urls <- unlist( failed.urls )
-  dump( list="failed.urls", file="FAILED-URLS.R" )  
-  setwd( ".." )
   print( paste0( "YEAR ", year, " COMPLETE" ) )
   print( "TOTAL RUN TIME:" )
   print( difftime( total.start.time, total.end.time, units="hours") )
 
-
+  failed.urls <- unlist( failed.urls )
+  dump( list="failed.urls", file="FAILED-URLS.R" )  
+  
+  setwd( ".." )
   return( failed.urls )
 
 }
+
+
+
 
 
 
@@ -471,36 +481,3 @@ get_object_id <- function( url )
 
 
 
-
-
-
-
-# # ensure group names unique to table
-# valid <- validate_group_names( nd, table.name )
-# if( ! valid )
-# { 
-#   xp <- nd |> xml2::xml_path()
-#   xp <- gsub( "\\[[0-9]{1,}\\]", "", xp ) |> unique()
-#   print("TABLE: ")
-#   print( table.name )
-#   print("TABLE XPATHS: ")
-#   print( original.xpaths )
-#   print("CURRENT XPATHS: ")
-#   print( xp )
-#   stop( 'Group names are not unique to the table' )
-# }
-# 
-# # ensure we are using root node for table
-# table.xpaths <- ( xmltools::xml_get_paths( nd, only_terminal_parent = TRUE ))
-# table.xpaths <- table.xpaths |> unlist() |> unique()
-# if( length( table.xpaths ) > 1 )
-# {
-#   nodes <- strsplit( table.xpaths, "/" )
-#   d1 <- suppressWarnings( data.frame( do.call( cbind, nodes ), stringsAsFactors=F ) )
-#   not.equal <- apply( d1, MARGIN=1, FUN=function(x){ length( unique( x )) > 1 } ) 
-#   this.one <- which( not.equal == T )[ 1 ]
-#   if( this.one < 2 ){ return( NULL ) }
-#   table.root <- d1[ this.one - 1,  ] |> as.character() |> unique()
-#   table.root <- paste0( "//", table.root )
-#   nd <- xml2::xml_find_all( doc, table.root )
-# }
